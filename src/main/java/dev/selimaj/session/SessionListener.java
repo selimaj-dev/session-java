@@ -13,9 +13,9 @@ import dev.selimaj.session.types.Message;
 import dev.selimaj.session.types.MethodHandler;
 
 public class SessionListener implements WebSocket.Listener {
-    public final ConcurrentHashMap<String, MethodHandler> methods = new ConcurrentHashMap<>();
+    public final ConcurrentHashMap<String, MethodHandler<JsonNode>> methods = new ConcurrentHashMap<>();
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    final ObjectMapper mapper = new ObjectMapper();
     private final ConcurrentHashMap<Integer, CompletableFuture<JsonNode>> pending = new ConcurrentHashMap<>();
     private final AtomicInteger id = new AtomicInteger();
 
@@ -31,7 +31,7 @@ public class SessionListener implements WebSocket.Listener {
         }
 
         if (msg instanceof Message.Request r) {
-            MethodHandler handler = methods.get(r.method());
+            MethodHandler<JsonNode> handler = methods.get(r.method());
 
             if (handler != null) {
                 handler.handle(r.id(), r.data())
