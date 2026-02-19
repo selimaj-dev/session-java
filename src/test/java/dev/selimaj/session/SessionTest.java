@@ -2,15 +2,19 @@ package dev.selimaj.session;
 
 import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.databind.node.TextNode;
+
 public class SessionTest {
     static void testRequest() throws Exception {
         Session session = Session.connect("ws://localhost:8080/");
 
-        String response = session.request(Methods.Data.getNameStatic(), "Hello from client", String.class).get();
+        TextNode response = session.request(Methods.Data.class, TextNode.valueOf("Hello from client")).get();
 
         System.out.println(response);
 
         Thread.sleep(1000);
+
+        session.close();
     }
 
     @Test

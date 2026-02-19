@@ -3,6 +3,7 @@ package dev.selimaj.session;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import dev.selimaj.session.types.Message;
+import dev.selimaj.session.types.Method;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -46,11 +47,10 @@ public final class Session {
         listener.notify(ws, method, data);
     }
 
-    public <Req, Res> CompletableFuture<Res> request(
-            String method,
-            Req data,
-            Class<Res> resType) throws Exception {
-        return listener.request(ws, method, data, resType);
+    <Req extends JsonNode, Res extends JsonNode, Err extends JsonNode> CompletableFuture<Res> request(
+            Class<? extends Method<Req, Res, Err>> method, Req req) throws Exception {
+        Method<Req, Res, Err> m = method.getDeclaredConstructor().newInstance();
+        return listener.request(ws, m.getName(), req, m.getResClass());
     }
 
     public void close() throws Exception {
