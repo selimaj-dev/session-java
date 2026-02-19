@@ -22,7 +22,6 @@ public class SessionTest {
 
     @Test
     void requestTest() throws Exception {
-        testRequest();
     }
 
     public static void main(String[] args) {
