@@ -20,3 +20,5 @@ replay_pid*
 
 # Logs
 *.log
+
+*.env
