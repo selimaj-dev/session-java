@@ -7,6 +7,7 @@ import dev.selimaj.session.types.Message;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
+import java.util.concurrent.CompletableFuture;
 
 public final class Session {
 
@@ -43,6 +44,13 @@ public final class Session {
 
     public void notify(String method, Object data) throws Exception {
         listener.notify(ws, method, data);
+    }
+
+    public <Req, Res> CompletableFuture<Res> request(
+            String method,
+            Req data,
+            Class<Res> resType) throws Exception {
+        return listener.request(ws, method, data, resType);
     }
 
     public void close() throws Exception {

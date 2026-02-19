@@ -25,4 +25,11 @@ dependencies {
     implementation 'jakarta.websocket:jakarta.websocket-api:2.1.1'
     // WebSocket client runtime
     implementation 'org.glassfish.tyrus:tyrus-client:2.1.2'
+
+    // For testing
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+}
+
+test {
+    useJUnitPlatform()
 }

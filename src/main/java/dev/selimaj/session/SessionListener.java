@@ -4,6 +4,7 @@ import java.net.http.WebSocket;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +17,7 @@ public class SessionListener implements WebSocket.Listener {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final ConcurrentHashMap<Integer, CompletableFuture<JsonNode>> pending = new ConcurrentHashMap<>();
+    private final AtomicInteger id = new AtomicInteger();
 
     @Override
     public CompletionStage<?> onText(WebSocket ws, CharSequence data, boolean last) {
@@ -72,5 +74,30 @@ public class SessionListener implements WebSocket.Listener {
 
     void notify(WebSocket ws, String method, Object data) throws Exception {
         send(ws, new Message.Notification(method, mapper.valueToTree(data)));
+    }
+
+    <Req, Res> CompletableFuture<Res> request(
+            WebSocket ws,
+            String method,
+            Req data,
+            Class<Res> resType) throws Exception {
+
+        int id = this.id.incrementAndGet();
+
+        CompletableFuture<JsonNode> fut = new CompletableFuture<>();
+        pending.put(id, fut);
+
+        send(ws, new Message.Request(
+                id,
+                method,
+                mapper.valueToTree(data)));
+
+        return fut.thenApply(json -> {
+            try {
+                return mapper.treeToValue(json, resType);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 }
