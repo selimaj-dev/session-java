@@ -6,9 +6,9 @@ public class SessionTest {
     static void testRequest() throws Exception {
         Session session = Session.connect("ws://localhost:8080/");
 
-        session.request(Methods.Data.getNameStatic(), "", String.class);
+        String response = session.request(Methods.Data.getNameStatic(), "Hello from client", String.class).get();
 
-        System.out.println("test");
+        System.out.println(response);
 
         Thread.sleep(1000);
     }
