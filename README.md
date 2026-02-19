@@ -7,7 +7,7 @@
 ## Introduction
 
 This library provides **type-safe WebSocket communication** with a request-response and notification system built on top of a flexible protocol.  
-It ensures compile-time guarantees for message structure, reduces runtime errors, and simplifies building Rust client/server applications.
+It ensures compile-time guarantees for message structure, reduces runtime errors, and simplifies building Java client/server applications.
 
 - **Dynamic Methods**: Each message includes a method enum for type safety.
 - **Typed Requests & Responses**: Automatic serialization and deserialization.
@@ -22,8 +22,27 @@ It ensures compile-time guarantees for message structure, reduces runtime errors
 
 ## Installation
 
-```bash
-cargo add session-rs
+#### Add the repository
+
+```groovy
+repositories {
+    mavenCentral()
+
+    maven {
+        url = uri("https://maven.pkg.github.com/selimaj-dev/session-java")
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
+}
+```
+
+#### Add the dependency
+```groovy
+dependencies {
+    implementation "dev.selimaj.session:session-java:0.1.0"
+}
 ```
 
 ---
