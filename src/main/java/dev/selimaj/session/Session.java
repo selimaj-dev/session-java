@@ -48,9 +48,8 @@ public final class Session {
     }
 
     <Req extends JsonNode, Res extends JsonNode, Err extends JsonNode> CompletableFuture<Res> request(
-            Class<? extends Method<Req, Res, Err>> method, Req req) throws Exception {
-        Method<Req, Res, Err> m = method.getDeclaredConstructor().newInstance();
-        return listener.request(ws, m.getName(), req, m.getResClass());
+            Method<Req, Res, Err> method, Req req) throws Exception {
+        return listener.request(ws, method.getName(), req, method.getResClass());
     }
 
     public void close() throws Exception {

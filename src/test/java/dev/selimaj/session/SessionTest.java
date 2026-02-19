@@ -8,7 +8,7 @@ public class SessionTest {
     static void testRequest() throws Exception {
         Session session = Session.connect("ws://localhost:8080/");
 
-        TextNode response = session.request(Methods.Data.class, TextNode.valueOf("Hello from client")).get();
+        TextNode response = session.request(Methods.Data, TextNode.valueOf("Hello from client")).get();
 
         System.out.println(response);
 

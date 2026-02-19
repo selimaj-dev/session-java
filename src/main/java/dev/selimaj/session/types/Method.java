@@ -8,7 +8,7 @@ public class Method<Req extends JsonNode, Res extends JsonNode, Err extends Json
     private final Class<Res> resClass;
     private final Class<Err> errClass;
 
-    protected Method(String name, Class<Req> reqClass, Class<Res> resClass, Class<Err> errClass) {
+    public Method(String name, Class<Req> reqClass, Class<Res> resClass, Class<Err> errClass) {
         this.name = name;
         this.reqClass = reqClass;
         this.resClass = resClass;
