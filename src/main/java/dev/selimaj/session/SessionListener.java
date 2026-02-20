@@ -1,6 +1,7 @@
 package dev.selimaj.session;
 
 import java.net.http.WebSocket;
+import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,7 +14,7 @@ import dev.selimaj.session.types.Message;
 import dev.selimaj.session.types.MethodHandler;
 
 public class SessionListener implements WebSocket.Listener {
-    public final ConcurrentHashMap<String, MethodHandler<JsonNode>> methods = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<String, MethodHandler<JsonNode>> methods = new ConcurrentHashMap<>();
 
     final ObjectMapper mapper = new ObjectMapper();
     private final ConcurrentHashMap<Integer, CompletableFuture<JsonNode>> pending = new ConcurrentHashMap<>();
@@ -58,6 +59,11 @@ public class SessionListener implements WebSocket.Listener {
         }
 
         return null;
+    }
+
+    @Override
+    public CompletionStage<?> onPing(WebSocket ws, ByteBuffer message) {
+        return ws.sendPong(message);
     }
 
     void send(WebSocket ws, Message msg) throws Exception {

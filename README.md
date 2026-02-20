@@ -26,22 +26,14 @@ It ensures compile-time guarantees for message structure, reduces runtime errors
 
 ```groovy
 repositories {
-    mavenCentral()
-
-    maven {
-        url = uri("https://maven.pkg.github.com/selimaj-dev/session-java")
-        credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
-            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
-        }
-    }
+    maven { url 'https://jitpack.io' }
 }
 ```
 
 #### Add the dependency
 ```groovy
 dependencies {
-    implementation "dev.selimaj.session:session-java:0.1.0"
+    implementation 'com.github.selimaj-dev:session-java:v0.1.3'
 }
 ```
 

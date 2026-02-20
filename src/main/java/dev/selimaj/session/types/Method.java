@@ -1,8 +1,6 @@
 package dev.selimaj.session.types;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-public class Method<Req extends JsonNode, Res extends JsonNode, Err extends JsonNode> {
+public class Method<Req, Res, Err> {
     private final String name;
     private final Class<Req> reqClass;
     private final Class<Res> resClass;

@@ -12,6 +12,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public final class Session {
 
@@ -34,6 +35,18 @@ public final class Session {
         return new Session(ws, listener);
     }
 
+    public static Session connect(String uri, long timeout, TimeUnit unit) throws Exception {
+        SessionListener listener = new SessionListener();
+
+        WebSocket ws = HttpClient.newHttpClient()
+                .newWebSocketBuilder()
+                .buildAsync(URI.create(uri), listener)
+                .orTimeout(timeout, unit)
+                .join();
+
+        return new Session(ws, listener);
+    }
+
     public void send(Message msg) throws Exception {
         listener.send(ws, msg);
     }
@@ -50,12 +63,12 @@ public final class Session {
         listener.notify(ws, method, data);
     }
 
-    <Req extends JsonNode, Res extends JsonNode, Err extends JsonNode> CompletableFuture<Res> request(
+    <Req, Res, Err> CompletableFuture<Res> request(
             Method<Req, Res, Err> method, Req req) throws Exception {
         return listener.request(ws, method.getName(), req, method.getResClass());
     }
 
-    <Req extends JsonNode, Res extends JsonNode, Err extends JsonNode> void onRequest(Method<Req, Res, Err> method,
+    <Req, Res, Err> void onRequest(Method<Req, Res, Err> method,
             MethodHandler<Req> handler) {
         MethodHandler<JsonNode> wrapper = (id, value) -> {
             try {
