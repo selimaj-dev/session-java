@@ -33,7 +33,7 @@ repositories {
 #### Add the dependency
 ```groovy
 dependencies {
-    implementation 'com.github.selimaj-dev:session-java:v0.1.3'
+    implementation 'com.github.selimaj-dev:session-java:0.1.3'
 }
 ```
 
