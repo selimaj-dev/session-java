@@ -63,12 +63,12 @@ public final class Session {
         listener.notify(ws, method, data);
     }
 
-    <Req, Res, Err> CompletableFuture<Res> request(
+    public <Req, Res, Err> CompletableFuture<Res> request(
             Method<Req, Res, Err> method, Req req) throws Exception {
         return listener.request(ws, method.getName(), req, method.getResClass());
     }
 
-    <Req, Res, Err> void onRequest(Method<Req, Res, Err> method,
+    public <Req, Res, Err> void onRequest(Method<Req, Res, Err> method,
             MethodHandler<Req> handler) {
         MethodHandler<JsonNode> wrapper = (id, value) -> {
             try {
