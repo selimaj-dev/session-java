@@ -58,12 +58,31 @@ public class SessionListener implements WebSocket.Listener {
                         new RuntimeException(r.error().toString()));
         }
 
+        ws.request(1);
         return null;
     }
 
     @Override
+    public void onOpen(WebSocket ws) {
+        ws.request(1);
+    }
+
+    @Override
     public CompletionStage<?> onPing(WebSocket ws, ByteBuffer message) {
+        ws.request(1);
         return ws.sendPong(message);
+    }
+
+    @Override
+    public CompletionStage<?> onPong(WebSocket ws, ByteBuffer message) {
+        ws.request(1);
+        return null;
+    }
+
+    @Override
+    public CompletionStage<?> onClose(WebSocket ws, int statusCode, String reason) {
+        ws.request(1);
+        return null;
     }
 
     void send(WebSocket ws, Message msg) throws Exception {
