@@ -83,15 +83,13 @@ public final class Session {
         this.listener.methods.put(method.getName(), wrapper);
     }
 
-    public <Req, Res, Err> void onNotification(Method<Req, Res, Err> method,
-            NotificationHandler<Req, Res, Err> handler) {
-        NotificationHandler<JsonNode, JsonNode, JsonNode> wrapper = (id, value) -> {
-            return CompletableFuture.supplyAsync(() -> {
+    public <Req, Res, Err> void onNotification(Method<Req, Res, Err> method, NotificationHandler<Req> handler) {
+        NotificationHandler<JsonNode> wrapper = (value) -> {
+            CompletableFuture.runAsync(() -> {
                 try {
-                    return handler.handle(id, listener.mapper.treeToValue(value, method.getReqClass())).get()
-                            .intoJSON(listener.mapper);
+                    handler.handle(listener.mapper.treeToValue(value, method.getReqClass()));
                 } catch (Exception e) {
-                    return SessionResult.error(TextNode.valueOf(e.getMessage()));
+                    e.printStackTrace();
                 }
             });
         };

@@ -17,7 +17,7 @@ import dev.selimaj.session.types.NotificationHandler;
 
 public class SessionListener implements WebSocket.Listener {
     final ConcurrentHashMap<String, MethodHandler<JsonNode, JsonNode, JsonNode>> methods = new ConcurrentHashMap<>();
-    final ConcurrentHashMap<String, NotificationHandler<JsonNode, JsonNode, JsonNode>> notificationHandlers = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<String, NotificationHandler<JsonNode>> notificationHandlers = new ConcurrentHashMap<>();
 
     final ObjectMapper mapper = new ObjectMapper();
     private final ConcurrentHashMap<Integer, CompletableFuture<JsonNode>> pending = new ConcurrentHashMap<>();
@@ -58,6 +58,16 @@ public class SessionListener implements WebSocket.Listener {
             if (fut != null)
                 fut.completeExceptionally(
                         new RuntimeException(r.error().toString()));
+        } else if (msg instanceof Message.Notification r) {
+            NotificationHandler<JsonNode> handler = notificationHandlers.get(r.method());
+
+            if (handler != null) {
+                try {
+                    handler.handle(r.data());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         ws.request(1);
