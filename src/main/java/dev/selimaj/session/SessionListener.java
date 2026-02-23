@@ -3,6 +3,7 @@ package dev.selimaj.session;
 import java.net.http.WebSocket;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,9 +13,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.selimaj.session.types.Message;
 import dev.selimaj.session.types.MethodHandler;
+import dev.selimaj.session.types.NotificationHandler;
 
 public class SessionListener implements WebSocket.Listener {
-    final ConcurrentHashMap<String, MethodHandler<JsonNode>> methods = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<String, MethodHandler<JsonNode, JsonNode, JsonNode>> methods = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<String, NotificationHandler<JsonNode, JsonNode, JsonNode>> notificationHandlers = new ConcurrentHashMap<>();
 
     final ObjectMapper mapper = new ObjectMapper();
     private final ConcurrentHashMap<Integer, CompletableFuture<JsonNode>> pending = new ConcurrentHashMap<>();
@@ -32,20 +35,19 @@ public class SessionListener implements WebSocket.Listener {
         }
 
         if (msg instanceof Message.Request r) {
-            MethodHandler<JsonNode> handler = methods.get(r.method());
+            MethodHandler<JsonNode, JsonNode, JsonNode> handler = methods.get(r.method());
 
             if (handler != null) {
-                handler.handle(r.id(), r.data())
-                        .thenAccept(res -> {
-                            try {
-                                if (res.isError()) {
-                                    respondError(ws, r.id(), res.value());
-                                } else {
-                                    respond(ws, r.id(), res.value());
-                                }
-                            } catch (Exception ignored) {
-                            }
-                        });
+                try {
+                    var res = handler.handle(r.id(), r.data());
+
+                    if (res.isError()) {
+                        respondError(ws, r.id(), res.getJsonNode(mapper));
+                    } else {
+                        respond(ws, r.id(), res.getJsonNode(mapper));
+                    }
+                } catch (Exception ignored) {
+                }
             }
         } else if (msg instanceof Message.Response r) {
             CompletableFuture<JsonNode> fut = pending.remove(r.id());
@@ -101,28 +103,36 @@ public class SessionListener implements WebSocket.Listener {
         send(ws, new Message.Notification(method, mapper.valueToTree(data)));
     }
 
-    <Req, Res> CompletableFuture<Res> request(
+    public <Req, Res> CompletableFuture<Res> request(
             WebSocket ws,
             String method,
             Req data,
-            Class<Res> resType) throws Exception {
+            Class<Res> resType) {
 
         int id = this.id.incrementAndGet();
 
-        CompletableFuture<JsonNode> fut = new CompletableFuture<>();
-        pending.put(id, fut);
-
-        send(ws, new Message.Request(
-                id,
-                method,
-                mapper.valueToTree(data)));
-
-        return fut.thenApply(json -> {
-            try {
-                return mapper.treeToValue(json, resType);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+        return CompletableFuture
+                .runAsync(() -> {
+                    try {
+                        send(ws, new Message.Request(
+                                id,
+                                method,
+                                mapper.valueToTree(data)));
+                    } catch (Exception e) {
+                        throw new CompletionException(e);
+                    }
+                })
+                .thenCompose(v -> {
+                    CompletableFuture<JsonNode> fut = new CompletableFuture<>();
+                    pending.put(id, fut);
+                    return fut;
+                })
+                .thenApply(json -> {
+                    try {
+                        return mapper.treeToValue(json, resType);
+                    } catch (Exception e) {
+                        throw new CompletionException(e);
+                    }
+                });
     }
 }

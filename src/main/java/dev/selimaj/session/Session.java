@@ -7,6 +7,7 @@ import dev.selimaj.session.types.SessionResult;
 import dev.selimaj.session.types.Message;
 import dev.selimaj.session.types.Method;
 import dev.selimaj.session.types.MethodHandler;
+import dev.selimaj.session.types.NotificationHandler;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -69,16 +70,33 @@ public final class Session {
     }
 
     public <Req, Res, Err> void onRequest(Method<Req, Res, Err> method,
-            MethodHandler<Req> handler) {
-        MethodHandler<JsonNode> wrapper = (id, value) -> {
+            MethodHandler<Req, Res, Err> handler) {
+        MethodHandler<JsonNode, JsonNode, JsonNode> wrapper = (id, value) -> {
             try {
-                return handler.handle(id, listener.mapper.treeToValue(value, method.getReqClass()));
+                return handler.handle(id, listener.mapper.treeToValue(value, method.getReqClass()))
+                        .intoJSON(listener.mapper);
             } catch (Exception e) {
                 return SessionResult.error(TextNode.valueOf(e.getMessage()));
             }
         };
 
         this.listener.methods.put(method.getName(), wrapper);
+    }
+
+    public <Req, Res, Err> void onNotification(Method<Req, Res, Err> method,
+            NotificationHandler<Req, Res, Err> handler) {
+        NotificationHandler<JsonNode, JsonNode, JsonNode> wrapper = (id, value) -> {
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    return handler.handle(id, listener.mapper.treeToValue(value, method.getReqClass())).get()
+                            .intoJSON(listener.mapper);
+                } catch (Exception e) {
+                    return SessionResult.error(TextNode.valueOf(e.getMessage()));
+                }
+            });
+        };
+
+        this.listener.notificationHandlers.put(method.getName(), wrapper);
     }
 
     public void close() throws Exception {
